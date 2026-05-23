@@ -1,0 +1,6 @@
+Flask
+gunicorn
+numpy
+scikit-fuzzy
+matplotlib
+reportlab

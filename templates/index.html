@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <!-- CONFIGURACIÓN GENERAL -->
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <!-- TÍTULO -->
+    <title>
+        Sistema Inteligente T&C FRUITS
+    </title>
+
+    <!-- CONEXIÓN CON CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='estilos.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="contenedor">
+
+        <!-- LOGO -->
+        <div class="logo-contenedor">
+
+            <img
+                src="{{ url_for('static', filename='logo.png') }}"
+                class="logo"
+                alt="Logo T&C FRUITS"
+            >
+
+        </div>
+
+        <!-- TÍTULO PRINCIPAL -->
+        <h1>
+            Sistema Inteligente de Cálculo de Producción en T&C FRUITS
+        </h1>
+
+        <!-- DESCRIPCIÓN -->
+        <p class="descripcion">
+
+            Sistema basado en lógica difusa para estimar la producción
+            y eficiencia de etiquetado dentro del proceso de empacado
+            de aguacate.
+
+        </p>
+
+        <!-- FORMULARIO -->
+        <form
+            class="formulario"
+            action="/calcular"
+            method="POST"
+        >
+
+            <!-- VELOCIDAD -->
+            <label>
+                Velocidad de la Máquina
+            </label>
+
+            <input
+                type="number"
+                name="velocidad"
+                min="0"
+                max="100"
+                placeholder="Ingrese un valor de 0 a 100"
+                required
+            >
+
+            <!-- CAJAS -->
+            <label>
+                Cantidad de Cajas
+            </label>
+
+            <input
+                type="number"
+                name="cajas"
+                min="0"
+                max="500"
+                placeholder="Ingrese un valor de 0 a 500"
+                required
+            >
+
+            <!-- CALIDAD -->
+            <label>
+                Calidad del Aguacate
+            </label>
+
+            <input
+                type="number"
+                name="calidad"
+                min="0"
+                max="10"
+                placeholder="Ingrese un valor de 0 a 10"
+                required
+            >
+
+            <!-- BOTÓN -->
+            <button type="submit">
+
+                Ejecutar Sistema Inteligente
+
+            </button>
+
+        </form>
+
+        <!-- SECCIÓN DE RESULTADOS -->
+        <div class="resultados">
+
+            <h2>
+                Resultados
+            </h2>
+
+            <p>
+                Ingrese los datos y presione el botón para
+                ejecutar el sistema difuso.
+            </p>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

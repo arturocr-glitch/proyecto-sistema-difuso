@@ -1,0 +1,848 @@
+# =============================================================
+# PROYECTO FINAL
+# SISTEMAS DIFUSOS INTELIGENTES
+# MAESTRÍA EN INTELIGENCIA ARTIFICIAL
+# ING. ARTURO CAMPOS RODRIGUEZ
+# SISTEMA INTELIGENTE DE CÁLCULO DE PRODUCCIÓN
+# T&C FRUITS
+# =============================================================
+
+# =============================================================
+# IMPORTACIÓN DE LIBRERÍAS
+# =============================================================
+
+# Flask para aplicación web
+from flask import Flask, render_template, request
+
+# Librerías matemáticas
+import numpy as np
+
+# Librería lógica difusa
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# =============================================================
+# CONFIGURACIÓN DE MATPLOTLIB
+# IMPORTANTE:
+# Esto evita errores de Tkinter y bloqueos en Flask
+# =============================================================
+
+import matplotlib
+
+matplotlib.use('Agg')
+
+# Librería de gráficas
+import matplotlib.pyplot as plt
+
+# Librería PDF
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+
+# Librería sistema operativo
+import os
+
+# Fecha y hora
+from datetime import datetime
+
+# =============================================================
+# CREAR APLICACIÓN WEB
+# =============================================================
+
+app = Flask(__name__)
+
+# =============================================================
+# PÁGINA PRINCIPAL
+# =============================================================
+
+@app.route('/')
+
+def inicio():
+
+    return render_template('index.html')
+
+# =============================================================
+# FUNCIÓN PRINCIPAL DEL SISTEMA DIFUSO
+# =============================================================
+
+@app.route('/calcular', methods=['POST'])
+
+def calcular():
+
+    # =========================================================
+    # OBTENER DATOS DEL FORMULARIO HTML
+    # =========================================================
+
+    velocidad_usuario = float(
+        request.form['velocidad']
+    )
+
+    cajas_usuario = float(
+        request.form['cajas']
+    )
+
+    calidad_usuario = float(
+        request.form['calidad']
+    )
+
+    # =========================================================
+    # VARIABLES DIFUSAS DE ENTRADA
+    # =========================================================
+
+    # Velocidad de la máquina
+    velocidad = ctrl.Antecedent(
+        np.arange(0, 101, 1),
+        'velocidad'
+    )
+
+    # Cantidad de cajas
+    cajas = ctrl.Antecedent(
+        np.arange(0, 501, 1),
+        'cajas'
+    )
+
+    # Calidad del aguacate
+    calidad = ctrl.Antecedent(
+        np.arange(0, 11, 1),
+        'calidad'
+    )
+
+    # =========================================================
+    # VARIABLES DIFUSAS DE SALIDA
+    # =========================================================
+
+    # Producción
+    produccion = ctrl.Consequent(
+        np.arange(0, 501, 1),
+        'produccion'
+    )
+
+    # Etiquetado
+    etiquetado = ctrl.Consequent(
+        np.arange(0, 101, 1),
+        'etiquetado'
+    )
+
+    # =========================================================
+    # FUNCIONES DE MEMBRESÍA
+    # =========================================================
+
+    # =========================================================
+    # VELOCIDAD
+    # =========================================================
+
+    velocidad['baja'] = fuzz.trimf(
+        velocidad.universe,
+        [0, 0, 40]
+    )
+
+    velocidad['media'] = fuzz.trimf(
+        velocidad.universe,
+        [20, 50, 80]
+    )
+
+    velocidad['alta'] = fuzz.trimf(
+        velocidad.universe,
+        [60, 100, 100]
+    )
+
+    # =========================================================
+    # CAJAS
+    # =========================================================
+
+    cajas['pocas'] = fuzz.trimf(
+        cajas.universe,
+        [0, 0, 200]
+    )
+
+    cajas['moderadas'] = fuzz.trimf(
+        cajas.universe,
+        [100, 250, 400]
+    )
+
+    cajas['muchas'] = fuzz.trimf(
+        cajas.universe,
+        [300, 500, 500]
+    )
+
+    # =========================================================
+    # CALIDAD
+    # =========================================================
+
+    calidad['mala'] = fuzz.trimf(
+        calidad.universe,
+        [0, 0, 4]
+    )
+
+    calidad['regular'] = fuzz.trimf(
+        calidad.universe,
+        [2, 5, 8]
+    )
+
+    calidad['buena'] = fuzz.trimf(
+        calidad.universe,
+        [6, 10, 10]
+    )
+
+    # =========================================================
+    # PRODUCCIÓN
+    # =========================================================
+
+    produccion['baja'] = fuzz.trimf(
+        produccion.universe,
+        [0, 0, 200]
+    )
+
+    produccion['media'] = fuzz.trimf(
+        produccion.universe,
+        [100, 250, 400]
+    )
+
+    produccion['alta'] = fuzz.trimf(
+        produccion.universe,
+        [300, 500, 500]
+    )
+
+    # =========================================================
+    # ETIQUETADO
+    # =========================================================
+
+    etiquetado['deficiente'] = fuzz.trimf(
+        etiquetado.universe,
+        [0, 0, 40]
+    )
+
+    etiquetado['aceptable'] = fuzz.trimf(
+        etiquetado.universe,
+        [30, 50, 70]
+    )
+
+    etiquetado['excelente'] = fuzz.trimf(
+        etiquetado.universe,
+        [60, 100, 100]
+    )
+
+    # =========================================================
+    # 27 REGLAS DIFUSAS
+    # =========================================================
+
+    reglas = [
+
+        # =====================================================
+        # VELOCIDAD BAJA
+        # =====================================================
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['pocas'] &
+            calidad['mala'],
+            [produccion['baja'],
+             etiquetado['deficiente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['pocas'] &
+            calidad['regular'],
+            [produccion['baja'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['pocas'] &
+            calidad['buena'],
+            [produccion['media'],
+             etiquetado['excelente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['moderadas'] &
+            calidad['mala'],
+            [produccion['baja'],
+             etiquetado['deficiente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['moderadas'] &
+            calidad['regular'],
+            [produccion['media'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['moderadas'] &
+            calidad['buena'],
+            [produccion['media'],
+             etiquetado['excelente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['muchas'] &
+            calidad['mala'],
+            [produccion['baja'],
+             etiquetado['deficiente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['muchas'] &
+            calidad['regular'],
+            [produccion['media'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['baja'] &
+            cajas['muchas'] &
+            calidad['buena'],
+            [produccion['alta'],
+             etiquetado['excelente']]
+        ),
+
+        # =====================================================
+        # VELOCIDAD MEDIA
+        # =====================================================
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['pocas'] &
+            calidad['mala'],
+            [produccion['baja'],
+             etiquetado['deficiente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['pocas'] &
+            calidad['regular'],
+            [produccion['media'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['pocas'] &
+            calidad['buena'],
+            [produccion['media'],
+             etiquetado['excelente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['moderadas'] &
+            calidad['mala'],
+            [produccion['media'],
+             etiquetado['deficiente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['moderadas'] &
+            calidad['regular'],
+            [produccion['media'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['moderadas'] &
+            calidad['buena'],
+            [produccion['alta'],
+             etiquetado['excelente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['muchas'] &
+            calidad['mala'],
+            [produccion['media'],
+             etiquetado['deficiente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['muchas'] &
+            calidad['regular'],
+            [produccion['alta'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['media'] &
+            cajas['muchas'] &
+            calidad['buena'],
+            [produccion['alta'],
+             etiquetado['excelente']]
+        ),
+
+        # =====================================================
+        # VELOCIDAD ALTA
+        # =====================================================
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['pocas'] &
+            calidad['mala'],
+            [produccion['media'],
+             etiquetado['deficiente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['pocas'] &
+            calidad['regular'],
+            [produccion['media'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['pocas'] &
+            calidad['buena'],
+            [produccion['alta'],
+             etiquetado['excelente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['moderadas'] &
+            calidad['mala'],
+            [produccion['media'],
+             etiquetado['deficiente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['moderadas'] &
+            calidad['regular'],
+            [produccion['alta'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['moderadas'] &
+            calidad['buena'],
+            [produccion['alta'],
+             etiquetado['excelente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['muchas'] &
+            calidad['mala'],
+            [produccion['media'],
+             etiquetado['aceptable']]
+        ),
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['muchas'] &
+            calidad['regular'],
+            [produccion['alta'],
+             etiquetado['excelente']]
+        ),
+
+        ctrl.Rule(
+            velocidad['alta'] &
+            cajas['muchas'] &
+            calidad['buena'],
+            [produccion['alta'],
+             etiquetado['excelente']]
+        )
+
+    ]
+
+    # =========================================================
+    # CREACIÓN DEL SISTEMA DIFUSO
+    # =========================================================
+
+    sistema_control = ctrl.ControlSystem(
+        reglas
+    )
+
+    sistema = ctrl.ControlSystemSimulation(
+        sistema_control
+    )
+
+    # =========================================================
+    # INGRESAR DATOS
+    # =========================================================
+
+    sistema.input['velocidad'] = velocidad_usuario
+    sistema.input['cajas'] = cajas_usuario
+    sistema.input['calidad'] = calidad_usuario
+
+    # =========================================================
+    # EJECUTAR SISTEMA
+    # =========================================================
+
+    sistema.compute()
+
+    # =========================================================
+    # RESULTADOS NUMÉRICOS
+    # =========================================================
+
+    resultado_produccion = round(
+        sistema.output['produccion'],
+        2
+    )
+
+    resultado_etiquetado = round(
+        sistema.output['etiquetado'],
+        2
+    )
+
+    # =========================================================
+    # RESULTADOS DIFUSOS
+    # =========================================================
+
+    if resultado_produccion <= 180:
+
+        produccion_difusa = "BAJA"
+
+    elif resultado_produccion <= 350:
+
+        produccion_difusa = "MEDIA"
+
+    else:
+
+        produccion_difusa = "ALTA"
+
+    # ---------------------------------------------------------
+
+    if resultado_etiquetado <= 40:
+
+        etiquetado_difuso = "DEFICIENTE"
+
+    elif resultado_etiquetado <= 70:
+
+        etiquetado_difuso = "ACEPTABLE"
+
+    else:
+
+        etiquetado_difuso = "EXCELENTE"
+
+    # =========================================================
+    # CREAR CARPETA DE GRÁFICAS
+    # =========================================================
+
+    if not os.path.exists("graficas"):
+
+        os.makedirs("graficas")
+
+    # =========================================================
+    # GRÁFICAS VARIABLES DE ENTRADA
+    # =========================================================
+
+    velocidad.view()
+    plt.title("Velocidad")
+    plt.savefig("graficas/velocidad.png")
+    plt.close()
+
+    cajas.view()
+    plt.title("Cantidad de Cajas")
+    plt.savefig("graficas/cajas.png")
+    plt.close()
+
+    calidad.view()
+    plt.title("Calidad del Aguacate")
+    plt.savefig("graficas/calidad.png")
+    plt.close()
+
+    # =========================================================
+    # GRÁFICAS VARIABLES DE SALIDA
+    # =========================================================
+
+    produccion.view(sim=sistema)
+    plt.title("Producción")
+    plt.savefig("graficas/produccion.png")
+    plt.close()
+
+    etiquetado.view(sim=sistema)
+    plt.title("Etiquetado")
+    plt.savefig("graficas/etiquetado.png")
+    plt.close()
+
+    # =========================================================
+    # FECHA Y HORA
+    # =========================================================
+
+    fecha_actual = datetime.now().strftime(
+        "%d/%m/%Y %H:%M:%S"
+    )
+
+    # =========================================================
+    # CREAR PDF
+    # =========================================================
+
+    pdf = canvas.Canvas(
+        "Reporte_TYC_FRUITS.pdf",
+        pagesize=letter
+    )
+
+    # =========================================================
+    # LOGO
+    # =========================================================
+
+    pdf.drawImage(
+        "static/logo.png",
+        220,
+        700,
+        width=150,
+        height=70
+    )
+
+    # =========================================================
+    # TÍTULOS
+    # =========================================================
+
+    pdf.setFont("Helvetica-Bold", 18)
+
+    pdf.drawString(
+        120,
+        660,
+        "T&C FRUITS"
+    )
+
+    pdf.setFont("Helvetica", 13)
+
+    pdf.drawString(
+        70,
+        630,
+        "Sistema Inteligente de Cálculo de Producción"
+    )
+
+    # =========================================================
+    # DATOS ACADÉMICOS
+    # =========================================================
+
+    pdf.setFont("Helvetica", 11)
+
+    pdf.drawString(
+        70,
+        600,
+        "Alumno: Arturo Campos Rodriguez"
+    )
+
+    pdf.drawString(
+        70,
+        580,
+        "Materia: Sistemas Difusos Inteligentes"
+    )
+
+    pdf.drawString(
+        70,
+        560,
+        "Maestría: Inteligencia Artificial"
+    )
+
+    pdf.drawString(
+        70,
+        540,
+        "Instituto Tecnológico Superior de Uruapan"
+    )
+
+    # =========================================================
+    # FECHA
+    # =========================================================
+
+    pdf.drawString(
+        70,
+        510,
+        f"Fecha y hora: {fecha_actual}"
+    )
+
+    # =========================================================
+    # DATOS INGRESADOS
+    # =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    pdf.drawString(
+        70,
+        470,
+        "DATOS INGRESADOS"
+    )
+
+    pdf.setFont("Helvetica", 11)
+
+    pdf.drawString(
+        90,
+        445,
+        f"Velocidad: {velocidad_usuario}"
+    )
+
+    pdf.drawString(
+        90,
+        425,
+        f"Cajas: {cajas_usuario}"
+    )
+
+    pdf.drawString(
+        90,
+        405,
+        f"Calidad: {calidad_usuario}"
+    )
+
+    # =========================================================
+    # RESULTADOS
+    # =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    pdf.drawString(
+        70,
+        370,
+        "RESULTADOS OBTENIDOS"
+    )
+
+    pdf.setFont("Helvetica", 11)
+
+    pdf.drawString(
+        90,
+        345,
+        f"Producción numérica: {resultado_produccion}"
+    )
+
+    pdf.drawString(
+        90,
+        325,
+        f"Producción difusa: {produccion_difusa}"
+    )
+
+    pdf.drawString(
+        90,
+        305,
+        f"Etiquetado numérico: {resultado_etiquetado}"
+    )
+
+    pdf.drawString(
+        90,
+        285,
+        f"Etiquetado difuso: {etiquetado_difuso}"
+    )
+
+    # =========================================================
+    # NUEVA PÁGINA PDF
+    # =========================================================
+
+    pdf.showPage()
+
+    # =========================================================
+    # TÍTULO GRÁFICAS
+    # =========================================================
+
+    pdf.setFont("Helvetica-Bold", 16)
+
+    pdf.drawString(
+        170,
+        750,
+        "GRÁFICAS DEL SISTEMA DIFUSO"
+    )
+
+    # =========================================================
+    # GRÁFICAS ENTRADA
+    # =========================================================
+
+    pdf.drawImage(
+        "graficas/velocidad.png",
+        30,
+        500,
+        width=170,
+        height=150
+    )
+
+    pdf.drawImage(
+        "graficas/cajas.png",
+        220,
+        500,
+        width=170,
+        height=150
+    )
+
+    pdf.drawImage(
+        "graficas/calidad.png",
+        410,
+        500,
+        width=170,
+        height=150
+    )
+
+    # =========================================================
+    # GRÁFICAS SALIDA
+    # =========================================================
+
+    pdf.drawImage(
+        "graficas/produccion.png",
+        60,
+        220,
+        width=220,
+        height=180
+    )
+
+    pdf.drawImage(
+        "graficas/etiquetado.png",
+        320,
+        220,
+        width=220,
+        height=180
+    )
+
+    # =========================================================
+    # GUARDAR PDF
+    # =========================================================
+
+    pdf.save()
+
+    # =========================================================
+    # MOSTRAR RESULTADOS EN WEB
+    # =========================================================
+
+    return f'''
+
+    <h1>
+        RESULTADOS DEL SISTEMA DIFUSO
+    </h1>
+
+    <h2>
+        Producción numérica:
+        {resultado_produccion}
+    </h2>
+
+    <h2>
+        Producción difusa:
+        {produccion_difusa}
+    </h2>
+
+    <h2>
+        Etiquetado numérico:
+        {resultado_etiquetado}
+    </h2>
+
+    <h2>
+        Etiquetado difuso:
+        {etiquetado_difuso}
+    </h2>
+
+    <h3>
+        PDF generado correctamente.
+    </h3>
+
+    <a href="/">
+        Volver al sistema
+    </a>
+
+    '''
+
+# =============================================================
+# EJECUTAR SERVIDOR WEB
+# =============================================================
+
+if __name__ == '__main__':
+
+    app.run(debug=True)
