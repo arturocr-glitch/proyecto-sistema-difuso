@@ -11,37 +11,23 @@
 # IMPORTACIÓN DE LIBRERÍAS
 # =============================================================
 
-# Flask para aplicación web
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 
-# Librerías matemáticas
 import numpy as np
 
-# Librería lógica difusa
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
-# =============================================================
-# CONFIGURACIÓN DE MATPLOTLIB
-# IMPORTANTE:
-# Esto evita errores de Tkinter y bloqueos en Flask
-# =============================================================
-
 import matplotlib
-
 matplotlib.use('Agg')
 
-# Librería de gráficas
 import matplotlib.pyplot as plt
 
-# Librería PDF
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
-# Librería sistema operativo
 import os
 
-# Fecha y hora
 from datetime import datetime
 
 # =============================================================
@@ -59,6 +45,19 @@ app = Flask(__name__)
 def inicio():
 
     return render_template('index.html')
+
+# =============================================================
+# DESCARGAR PDF
+# =============================================================
+
+@app.route('/descargar_pdf')
+
+def descargar_pdf():
+
+    return send_file(
+        "Reporte_TYC_FRUITS.pdf",
+        as_attachment=True
+    )
 
 # =============================================================
 # FUNCIÓN PRINCIPAL DEL SISTEMA DIFUSO
@@ -88,19 +87,16 @@ def calcular():
     # VARIABLES DIFUSAS DE ENTRADA
     # =========================================================
 
-    # Velocidad de la máquina
     velocidad = ctrl.Antecedent(
         np.arange(0, 101, 1),
         'velocidad'
     )
 
-    # Cantidad de cajas
     cajas = ctrl.Antecedent(
         np.arange(0, 501, 1),
         'cajas'
     )
 
-    # Calidad del aguacate
     calidad = ctrl.Antecedent(
         np.arange(0, 11, 1),
         'calidad'
@@ -110,13 +106,11 @@ def calcular():
     # VARIABLES DIFUSAS DE SALIDA
     # =========================================================
 
-    # Producción
     produccion = ctrl.Consequent(
         np.arange(0, 501, 1),
         'produccion'
     )
 
-    # Etiquetado
     etiquetado = ctrl.Consequent(
         np.arange(0, 101, 1),
         'etiquetado'
@@ -126,9 +120,7 @@ def calcular():
     # FUNCIONES DE MEMBRESÍA
     # =========================================================
 
-    # =========================================================
     # VELOCIDAD
-    # =========================================================
 
     velocidad['baja'] = fuzz.trimf(
         velocidad.universe,
@@ -145,9 +137,7 @@ def calcular():
         [60, 100, 100]
     )
 
-    # =========================================================
     # CAJAS
-    # =========================================================
 
     cajas['pocas'] = fuzz.trimf(
         cajas.universe,
@@ -164,9 +154,7 @@ def calcular():
         [300, 500, 500]
     )
 
-    # =========================================================
     # CALIDAD
-    # =========================================================
 
     calidad['mala'] = fuzz.trimf(
         calidad.universe,
@@ -183,9 +171,7 @@ def calcular():
         [6, 10, 10]
     )
 
-    # =========================================================
     # PRODUCCIÓN
-    # =========================================================
 
     produccion['baja'] = fuzz.trimf(
         produccion.universe,
@@ -202,9 +188,7 @@ def calcular():
         [300, 500, 500]
     )
 
-    # =========================================================
     # ETIQUETADO
-    # =========================================================
 
     etiquetado['deficiente'] = fuzz.trimf(
         etiquetado.universe,
@@ -227,10 +211,6 @@ def calcular():
 
     reglas = [
 
-        # =====================================================
-        # VELOCIDAD BAJA
-        # =====================================================
-
         ctrl.Rule(
             velocidad['baja'] &
             cajas['pocas'] &
@@ -303,10 +283,6 @@ def calcular():
              etiquetado['excelente']]
         ),
 
-        # =====================================================
-        # VELOCIDAD MEDIA
-        # =====================================================
-
         ctrl.Rule(
             velocidad['media'] &
             cajas['pocas'] &
@@ -378,10 +354,6 @@ def calcular():
             [produccion['alta'],
              etiquetado['excelente']]
         ),
-
-        # =====================================================
-        # VELOCIDAD ALTA
-        # =====================================================
 
         ctrl.Rule(
             velocidad['alta'] &
@@ -458,7 +430,7 @@ def calcular():
     ]
 
     # =========================================================
-    # CREACIÓN DEL SISTEMA DIFUSO
+    # CREAR SISTEMA DIFUSO
     # =========================================================
 
     sistema_control = ctrl.ControlSystem(
@@ -513,8 +485,6 @@ def calcular():
 
         produccion_difusa = "ALTA"
 
-    # ---------------------------------------------------------
-
     if resultado_etiquetado <= 40:
 
         etiquetado_difuso = "DEFICIENTE"
@@ -533,8 +503,9 @@ def calcular():
 
     if not os.path.exists("static/graficas"):
         os.makedirs("static/graficas")
+
     # =========================================================
-    # GRÁFICAS VARIABLES DE ENTRADA
+    # GENERAR GRÁFICAS
     # =========================================================
 
     velocidad.view()
@@ -551,10 +522,6 @@ def calcular():
     plt.title("Calidad del Aguacate")
     plt.savefig("static/graficas/calidad.png")
     plt.close()
-
-    # =========================================================
-    # GRÁFICAS VARIABLES DE SALIDA
-    # =========================================================
 
     produccion.view(sim=sistema)
     plt.title("Producción")
@@ -726,14 +693,10 @@ def calcular():
     )
 
     # =========================================================
-    # NUEVA PÁGINA PDF
+    # NUEVA PÁGINA
     # =========================================================
 
     pdf.showPage()
-
-    # =========================================================
-    # TÍTULO GRÁFICAS
-    # =========================================================
 
     pdf.setFont("Helvetica-Bold", 16)
 
@@ -744,7 +707,7 @@ def calcular():
     )
 
     # =========================================================
-    # GRÁFICAS ENTRADA
+    # INSERTAR GRÁFICAS
     # =========================================================
 
     pdf.drawImage(
@@ -771,10 +734,6 @@ def calcular():
         height=150
     )
 
-    # =========================================================
-    # GRÁFICAS SALIDA
-    # =========================================================
-
     pdf.drawImage(
         "static/graficas/produccion.png",
         60,
@@ -798,7 +757,7 @@ def calcular():
     pdf.save()
 
     # =========================================================
-    # MOSTRAR RESULTADOS EN WEB
+    # MOSTRAR RESULTADOS
     # =========================================================
 
     return f'''
@@ -831,6 +790,12 @@ def calcular():
         PDF generado correctamente.
     </h3>
 
+    <a href="/descargar_pdf">
+        Descargar PDF
+    </a>
+
+    <br><br>
+
     <a href="/">
         Volver al sistema
     </a>
@@ -838,7 +803,7 @@ def calcular():
     '''
 
 # =============================================================
-# EJECUTAR SERVIDOR WEB
+# EJECUTAR SERVIDOR
 # =============================================================
 
 if __name__ == '__main__':
