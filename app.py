@@ -531,27 +531,25 @@ def calcular():
     # CREAR CARPETA DE GRÁFICAS
     # =========================================================
 
-    if not os.path.exists("graficas"):
-
-        os.makedirs("graficas")
-
+    if not os.path.exists("static/graficas"):
+        os.makedirs("static/graficas")
     # =========================================================
     # GRÁFICAS VARIABLES DE ENTRADA
     # =========================================================
 
     velocidad.view()
     plt.title("Velocidad")
-    plt.savefig("graficas/velocidad.png")
+    plt.savefig("static/graficas/velocidad.png")
     plt.close()
 
     cajas.view()
     plt.title("Cantidad de Cajas")
-    plt.savefig("graficas/cajas.png")
+    plt.savefig("static/graficas/cajas.png")
     plt.close()
 
     calidad.view()
     plt.title("Calidad del Aguacate")
-    plt.savefig("graficas/calidad.png")
+    plt.savefig("static/graficas/calidad.png")
     plt.close()
 
     # =========================================================
@@ -560,12 +558,12 @@ def calcular():
 
     produccion.view(sim=sistema)
     plt.title("Producción")
-    plt.savefig("graficas/produccion.png")
+    plt.savefig("static/graficas/produccion.png")
     plt.close()
 
     etiquetado.view(sim=sistema)
     plt.title("Etiquetado")
-    plt.savefig("graficas/etiquetado.png")
+    plt.savefig("static/graficas/etiquetado.png")
     plt.close()
 
     # =========================================================
@@ -750,7 +748,7 @@ def calcular():
     # =========================================================
 
     pdf.drawImage(
-        "graficas/velocidad.png",
+        "static/graficas/velocidad.png",
         30,
         500,
         width=170,
@@ -758,7 +756,7 @@ def calcular():
     )
 
     pdf.drawImage(
-        "graficas/cajas.png",
+        "static/graficas/cajas.png",
         220,
         500,
         width=170,
@@ -766,7 +764,7 @@ def calcular():
     )
 
     pdf.drawImage(
-        "graficas/calidad.png",
+        "static/graficas/calidad.png",
         410,
         500,
         width=170,
@@ -778,7 +776,7 @@ def calcular():
     # =========================================================
 
     pdf.drawImage(
-        "graficas/produccion.png",
+        "static/graficas/produccion.png",
         60,
         220,
         width=220,
@@ -786,7 +784,7 @@ def calcular():
     )
 
     pdf.drawImage(
-        "graficas/etiquetado.png",
+        "static/graficas/etiquetado.png",
         320,
         220,
         width=220,
@@ -845,4 +843,4 @@ def calcular():
 
 if __name__ == '__main__':
 
-    app.run(debug=True)
+    app.run()
