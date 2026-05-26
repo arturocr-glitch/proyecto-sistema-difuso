@@ -4,4 +4,4 @@ numpy
 scikit-fuzzy
 matplotlib
 reportlab
-git add .
+scipy
